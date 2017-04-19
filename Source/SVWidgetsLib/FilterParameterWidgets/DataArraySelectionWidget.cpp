@@ -117,7 +117,7 @@ void DataArraySelectionWidget::setupGui()
     return;
   }
 
-  m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+  // m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
 
   // Generate the text for the QLabel
   label->setText(getFilterParameter()->getHumanLabel());
@@ -136,7 +136,54 @@ void DataArraySelectionWidget::setupGui()
   connect(getFilter(), SIGNAL(updateFilterParameters(AbstractFilter*)), this, SLOT(filterNeedsInputParameters(AbstractFilter*)));
 
   DataArrayPath defaultPath = getFilter()->property(PROPERTY_NAME_AS_CHAR).value<DataArrayPath>();
-  m_SelectedDataArrayPath->setText(defaultPath.serialize(Detail::Delimiter));
+  //m_SelectedDataArrayPath->setText(defaultPath.serialize(Detail::Delimiter));
+
+  dcLabel->setText(defaultPath.getDataContainerName());
+  amLabel->setText(defaultPath.getAttributeMatrixName());
+  daLabel->setText(defaultPath.getDataArrayName());
+
+//  setStyleSheet(dcLabel, QColor(0, 77, 245));
+//  setStyleSheet(amLabel, QColor(0, 142, 30));
+//  setStyleSheet(daLabel, QColor(215, 104, 0));
+
+//  dcLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+//  amLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+//  daLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+
+}
+
+// -----------------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------------
+void DataArraySelectionWidget::setStyleSheet2(QLabel* label, QColor color)
+{
+  QFont font;
+  font.setBold(true);
+  font.setItalic(true);
+  font.setWeight(QFont::Bold);
+  font.setStyleStrategy(QFont::PreferAntialias);
+  font.setFamily(QtSStyles::GetUIFont());
+
+  QString fontString;
+  QTextStream in(&fontString);
+
+#if defined(Q_OS_MAC)
+  font.setPointSize(12);
+#elif defined(Q_OS_WIN)
+  font.setPointSize(10);
+#else
+  font.setPointSize(10);
+  in << "font-weight:bold;";
+#endif
+
+  in << "font: " << font.weight() << " " << font.pointSize() << "pt \"" << font.family()  << "\";";
+  QString str;
+  QTextStream ss(&str);
+  ss << "QLabel {\n";
+  ss << " background-color: rgb(" << color.name(QColor::HexRgb) << ");\n";
+  ss << fontString;
+  ss << "}";
+  label->setStyleSheet(str);
 }
 
 // -----------------------------------------------------------------------------
@@ -315,15 +362,27 @@ void DataArraySelectionWidget::setSelectedPath(DataArrayPath daPath)
   if(daPath.isEmpty())
   {
     m_SelectedDataArrayPath->setToolTip(wrapStringInHtml("DataArrayPath is empty."));
-    m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+    //// m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+//    dcLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+//    amLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+//    daLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
     return;
   }
 
   DataContainerArray::Pointer dca = getFilter()->getDataContainerArray();
   if(nullptr == dca.get())
   {
-    m_SelectedDataArrayPath->setText(daPath.serialize(Detail::Delimiter));
-    m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+    //m_SelectedDataArrayPath->setText(daPath.serialize(Detail::Delimiter));
+    //// m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+    m_SelectedDataArrayPath->setText("");
+    dcLabel->setText(daPath.getDataContainerName());
+    amLabel->setText(daPath.getAttributeMatrixName());
+    daLabel->setText(daPath.getDataArrayName());
+
+//    dcLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+//    amLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+//    daLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+
     m_SelectedDataArrayPath->setToolTip(wrapStringInHtml("DataContainerArray is not available to verify path."));
     return;
   }
@@ -334,13 +393,29 @@ void DataArraySelectionWidget::setSelectedPath(DataArrayPath daPath)
     IDataArray::Pointer attrArray = attMat->getAttributeArray(daPath.getDataArrayName());
     QString html = attrArray->getInfoString(SIMPL::HtmlFormat);
     m_SelectedDataArrayPath->setToolTip(html);
-    m_SelectedDataArrayPath->setText(daPath.serialize(Detail::Delimiter));
-    m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(true));
+    //m_SelectedDataArrayPath->setText(daPath.serialize(Detail::Delimiter));
+    m_SelectedDataArrayPath->setText("");
+    //// m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(true));
+
+
+    dcLabel->setText(daPath.getDataContainerName());
+    amLabel->setText(daPath.getAttributeMatrixName());
+    daLabel->setText(daPath.getDataArrayName());
+
+//    dcLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(true));
+//    amLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(true));
+//    daLabel->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(true));
+
+
+    dcLabel->setToolTip(dca->getDataContainer(daPath.getDataContainerName())->getInfoString(SIMPL::HtmlFormat));
+    amLabel->setToolTip(attMat->getInfoString(SIMPL::HtmlFormat));
+    daLabel->setToolTip(html);
+
   }
   else
   {
     m_SelectedDataArrayPath->setToolTip(wrapStringInHtml("DataArrayPath does not exist."));
-    m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
+    // m_SelectedDataArrayPath->setStyleSheet(QtSStyles::QToolSelectionButtonStyle(false));
   }
 }
 
@@ -389,8 +464,9 @@ void DataArraySelectionWidget::beforePreflight()
 // -----------------------------------------------------------------------------
 void DataArraySelectionWidget::afterPreflight()
 {
-  DataArrayPath daPath = DataArrayPath::Deserialize(m_SelectedDataArrayPath->text(), Detail::Delimiter);
-  setSelectedPath(daPath);
+  DataArrayPath path(dcLabel->text(), amLabel->text(), daLabel->text());
+  //DataArrayPath daPath = DataArrayPath::Deserialize(m_SelectedDataArrayPath->text(), Detail::Delimiter);
+  setSelectedPath(path);
 }
 
 // -----------------------------------------------------------------------------
@@ -399,12 +475,12 @@ void DataArraySelectionWidget::afterPreflight()
 void DataArraySelectionWidget::filterNeedsInputParameters(AbstractFilter* filter)
 {
   // Generate the path to the AttributeArray
-  DataArrayPath selectedPath = DataArrayPath::Deserialize(m_SelectedDataArrayPath->text(), Detail::Delimiter);
-  QString dc = selectedPath.getDataContainerName();
-  QString am = selectedPath.getAttributeMatrixName();
-  QString da = selectedPath.getDataArrayName();
+//  DataArrayPath selectedPath = DataArrayPath::Deserialize(m_SelectedDataArrayPath->text(), Detail::Delimiter);
+//  QString dc = selectedPath.getDataContainerName();
+//  QString am = selectedPath.getAttributeMatrixName();
+//  QString da = selectedPath.getDataArrayName();
 
-  DataArrayPath path(dc, am, da);
+  DataArrayPath path(dcLabel->text(), amLabel->text(), daLabel->text());
   QVariant var;
   var.setValue(path);
   bool ok = false;

@@ -147,6 +147,8 @@ class SVWidgetsLib_EXPORT DataArraySelectionWidget : public FilterParameterWidge
 
     void setSelectedPath(DataArrayPath path);
 
+    void setStyleSheet2(QLabel* label, QColor color);
+
     DataArraySelectionWidget(const DataArraySelectionWidget&); // Copy Constructor Not Implemented
     void operator=(const DataArraySelectionWidget&); // Operator '=' Not Implemented
 
